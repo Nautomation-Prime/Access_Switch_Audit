@@ -1,0 +1,191 @@
+# yaml-language-server: $schema=./config.schema.json
+# ============================================================================
+# Cisco Access Switch Audit Tool - Configuration File
+# ============================================================================
+#
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2026 Christopher Davies
+#
+# This YAML file contains all user-configurable settings for the audit tool.
+# Edit values below to customize behavior for your environment.
+#
+# Every value is validated at startup; a bad one stops the tool with a message
+# naming the key. Check what the tool will actually use with:
+#   python -m switch_audit --show-config
+#
+# SECURITY NOTE: Do NOT store passwords or secrets in this file.
+# Use Windows Credential Manager or environment variables instead.
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Jump Host Configuration
+# ----------------------------------------------------------------------------
+# SSH bastion/jump host for accessing network devices.
+# Set to null or comment out if connecting directly to switches.
+jump_host: 192.0.2.51
+
+# ----------------------------------------------------------------------------
+# Credential Management
+# ----------------------------------------------------------------------------
+# Windows Credential Manager target name for storing/retrieving credentials.
+# The tool will look for stored username/password under this target name.
+# Falls back to interactive prompt if not found.
+credentials:
+  target: SwitchAudit/User  # Target name in Windows Credential Manager
+
+# ----------------------------------------------------------------------------
+# SSH Connection Parameters
+# ----------------------------------------------------------------------------
+# Timeout values control how long the tool waits for SSH operations.
+# Increase these if you have slow network links or high-latency connections.
+connection:
+  timeout: 25          # SSH connection establishment timeout (seconds)
+  banner_timeout: 30   # SSH banner negotiation timeout (seconds)
+  read_timeout: 60     # Command execution read timeout (seconds)
+
+  # Retry behavior for failed device connections
+  retries: 3           # Maximum number of connection retry attempts per device
+  retry_base_wait: 1   # Base wait time for exponential backoff (seconds)
+                       # Actual wait = retry_base_wait * 2^(attempt - 1), capped at 30s
+                       # Example with base 1: 1s, 2s, 4s before attempts 2, 3, 4
+
+# ----------------------------------------------------------------------------
+# SSH Host Key Verification
+# ----------------------------------------------------------------------------
+# Controls how the SSH host keys of the jump host and the devices are checked.
+#
+#   strict    Only hosts already listed in known_hosts are accepted. Most
+#             secure. Populate known_hosts first (e.g. ssh-keyscan), or every
+#             connection will be refused.
+#
+#   auto-add  Trust on first use (DEFAULT). An unknown host is accepted and
+#             recorded; a host whose key has CHANGED is refused. This is the
+#             case that matters for man-in-the-middle detection, and it does
+#             not break first runs.
+#
+#   insecure  Accept any key and remember nothing. This was the behaviour
+#             before host key checking existed. Lab use only.
+security:
+  host_key_policy: auto-add
+
+  # known_hosts file to verify against. null uses ~/.ssh/known_hosts.
+  # Supports ~ and environment variables.
+  known_hosts: null
+
+  # Write newly accepted keys back to known_hosts (auto-add only).
+  # Note: Netmiko does not persist device keys, so this mainly affects the
+  # jump host. Device keys are verified only once they are already recorded.
+  save_host_keys: true
+
+# ----------------------------------------------------------------------------
+# Audit Behavior & Analysis
+# ----------------------------------------------------------------------------
+audit:
+  # Stale port detection threshold
+  # Access ports are flagged as "stale" if:
+  #   - Connected: No traffic for >= N days (based on "Last input")
+  #   - Not connected: No PoE draw AND no LLDP/CDP neighbor detected
+  # Set to 0 to disable stale detection entirely.
+  default_stale_days: 30
+
+  # Port categorization feature
+  # When enabled, each access port gets a category label:
+  #   - trunk/routed, disabled, error, stale-unused, powered-device,
+  #     connected, available
+  # This provides quick visual inventory classification in Excel output.
+  enable_port_categorization: true
+
+  # Error counter alert threshold
+  # Ports with input/output errors exceeding this value are highlighted.
+  # Useful for identifying problematic interfaces.
+  error_threshold: 100
+
+  # Stale detection tuning
+  stale:
+    # Count administratively-down access ports as stale.
+    # Default false: they are already out of service and are reported under
+    # their own 'disabled' category, so counting them twice inflates the total.
+    include_admin_down: false
+
+    # Treat MAC addresses learned on a port as proof it is in use.
+    # Catches printers, IoT devices and unmanaged switches that speak neither
+    # CDP nor LLDP and draw no PoE. Requires the 'mac_table' collector.
+    use_mac_table: true
+
+  # How many learned MAC addresses to list per port before truncating.
+  mac_addresses_per_port: 5
+
+  # Optional CSV ('oui,vendor' per line) extending the built-in MAC vendor
+  # table. Point this at the full IEEE OUI list for complete coverage.
+  oui_file: null
+
+# ----------------------------------------------------------------------------
+# Optional Data Collectors
+# ----------------------------------------------------------------------------
+# Each collector runs one extra show command and adds columns to the report.
+# Disable the ones you do not need to shorten the audit; a collector whose
+# command a platform does not support is skipped automatically and never
+# fails the device.
+collectors:
+  # ── Per-port enrichment ────────────────────────────────────────────────────
+  switchport: true      # show interfaces switchport
+                        #   -> Admin Mode, Access VLAN, Voice VLAN, Native VLAN,
+                        #      Trunk VLANs, Negotiation
+  mac_table: true       # show mac address-table
+                        #   -> MAC Count, MAC Addresses, MAC Vendors, MAC VLANs
+                        #      (also feeds stale detection, see audit.stale)
+  vlans: true           # show vlan  -> VLAN Name, VLANs Defined/Active
+  spanning_tree: true   # show spanning-tree
+                        #   -> STP Role, STP State, STP Type, STP Edge (PortFast)
+  transceivers: true    # show interfaces transceiver
+                        #   -> Optic Temp/Voltage/Tx/Rx (optical health)
+  dot1x: false          # show authentication sessions
+                        #   -> Auth Method, Auth Domain, Auth Status, Auth MAC
+  etherchannel: false   # show etherchannel summary  -> Port-Channel membership
+  port_security: false  # show port-security
+                        #   -> PortSec Max/Current/Violations/Action
+
+  # ── Device-level facts (SUMMARY sheet) ─────────────────────────────────────
+  version_detail: true  # show version (TextFSM)
+                        #   -> Uptime, Reload Reason, Config Register, ROMMON,
+                        #      Running Image, Stack Members/Models/Serials
+  inventory: true       # show inventory  -> INVENTORY sheet with module and
+                        #   optic serial numbers (what you need for an RMA)
+  environment: true     # show environment power all / temperature
+                        #   -> PSUs Present/OK, Inlet Temp, Temp Status
+  poe_budget: true      # show power inline header
+                        #   -> PoE Available/Used/Remaining watts and Used %
+  cpu_memory: false     # show processes cpu  -> CPU 5s/1m/5m %
+
+# ----------------------------------------------------------------------------
+# Concurrency & Performance
+# ----------------------------------------------------------------------------
+# Controls how many devices are audited simultaneously.
+# Higher values = faster completion but more memory/CPU usage.
+# Recommended range: 5-20 depending on your system and network.
+concurrency:
+  default_workers: 10  # Maximum concurrent device audit sessions
+
+# ----------------------------------------------------------------------------
+# Excel Output Formatting
+# ----------------------------------------------------------------------------
+# Controls the appearance and structure of the generated Excel workbook.
+output:
+  # Default filename for audit results (can be overridden via --output CLI arg)
+  default_filename: output/audit.xlsx
+
+  # Column width constraints (characters)
+  # Auto-sizing will fit content between these bounds for readability.
+  min_column_width: 8   # Minimum Excel column width
+  max_column_width: 60  # Maximum Excel column width (prevents overly wide cells)
+
+# ----------------------------------------------------------------------------
+# TextFSM & Parsing
+# ----------------------------------------------------------------------------
+# TextFSM is used to parse structured data from Cisco show commands.
+# Templates are auto-discovered from the NET_TEXTFSM environment variable.
+textfsm:
+  enabled: true  # Use TextFSM parsing for 'show interfaces' (recommended)
+
+  # Optional: Override template path (leave null to use NET_TEXTFSM env var)
+  template_path: null

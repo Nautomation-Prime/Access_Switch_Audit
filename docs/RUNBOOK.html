@@ -1,0 +1,1287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Access Switch Audit Runbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+
+<style>
+  :root {
+    /* Neutrals biased toward the petrol accent, not inherited grey */
+    --paper:      #f5f8f8;
+    --surface:    #ffffff;
+    --surface-2:  #eef3f3;
+    --border:     #d7e1e2;
+    --border-str: #b9c8ca;
+    --text:       #111a1d;
+    --text-2:     #41545a;
+    --text-3:     #6b7f85;
+
+    --accent:     #14707d;
+    --accent-ink: #0c4d57;
+    --accent-wash:#e2f0f1;
+
+    --ok:         #1f7a4d;
+    --ok-wash:    #e2f2e9;
+    --warn:       #a86a05;
+    --warn-wash:  #fbeed6;
+    --crit:       #b02a37;
+    --crit-wash:  #fae4e6;
+
+    --code-bg:    #0f181b;
+    --code-text:  #dce7e9;
+    --code-dim:   #7d9599;
+
+    --sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --serif: "Source Serif 4", ui-serif, Georgia, "Times New Roman", serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+    --measure: 68ch;
+    --radius: 5px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #0d1416;
+      --surface:    #131d20;
+      --surface-2:  #182427;
+      --border:     #233236;
+      --border-str: #35484d;
+      --text:       #e4ecee;
+      --text-2:     #a9bcc0;
+      --text-3:     #7e9498;
+
+      --accent:     #45b3bf;
+      --accent-ink: #8ad4dc;
+      --accent-wash:#132e33;
+
+      --ok:         #5cc48b;
+      --ok-wash:    #122c20;
+      --warn:       #e0a94a;
+      --warn-wash:  #2e2312;
+      --crit:       #ef8a94;
+      --crit-wash:  #331519;
+
+      --code-bg:    #08100f;
+      --code-text:  #cfdee0;
+      --code-dim:   #6d868a;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:      #0d1416;
+    --surface:    #131d20;
+    --surface-2:  #182427;
+    --border:     #233236;
+    --border-str: #35484d;
+    --text:       #e4ecee;
+    --text-2:     #a9bcc0;
+    --text-3:     #7e9498;
+
+    --accent:     #45b3bf;
+    --accent-ink: #8ad4dc;
+    --accent-wash:#132e33;
+
+    --ok:         #5cc48b;
+    --ok-wash:    #122c20;
+    --warn:       #e0a94a;
+    --warn-wash:  #2e2312;
+    --crit:       #ef8a94;
+    --crit-wash:  #331519;
+
+    --code-bg:    #08100f;
+    --code-text:  #cfdee0;
+    --code-dim:   #6d868a;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--text);
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── Shell ─────────────────────────────────────────────────────────── */
+
+  .shell {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+  }
+
+  @media (min-width: 1020px) {
+    .shell {
+      grid-template-columns: 232px minmax(0, 1fr);
+      gap: 56px;
+      align-items: start;
+    }
+  }
+
+  /* ─── Masthead ──────────────────────────────────────────────────────── */
+
+  header.masthead {
+    grid-column: 1 / -1;
+    padding: 48px 0 28px;
+    border-bottom: 2px solid var(--text);
+    margin-bottom: 40px;
+  }
+
+  .eyebrow {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 12px;
+  }
+
+  h1 {
+    font-family: var(--sans);
+    font-size: clamp(30px, 5vw, 44px);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin: 0 0 14px;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-size: 19px;
+    color: var(--text-2);
+    max-width: var(--measure);
+    margin: 0 0 24px;
+  }
+
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    font-family: var(--sans);
+    font-size: 13px;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+
+  .fact {
+    padding-right: 28px;
+    margin-right: 28px;
+    border-right: 1px solid var(--border);
+  }
+  .fact:last-child { border-right: none; margin-right: 0; padding-right: 0; }
+
+  .fact dt {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin: 0 0 3px;
+  }
+  .fact dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .fact dd code { font-size: 13px; background: none; padding: 0; border: none; }
+
+  /* ─── Section index ─────────────────────────────────────────────────── */
+
+  nav.index {
+    display: none;
+    font-family: var(--sans);
+  }
+
+  @media (min-width: 1020px) {
+    nav.index {
+      display: block;
+      position: sticky;
+      top: 24px;
+      max-height: calc(100vh - 48px);
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+  }
+
+  nav.index h2 {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin: 0 0 12px;
+  }
+
+  nav.index ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    counter-reset: nav;
+  }
+
+  nav.index a {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 4px;
+    padding: 5px 8px 5px 0;
+    font-size: 13.5px;
+    line-height: 1.35;
+    color: var(--text-2);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    padding-left: 10px;
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+  nav.index a::before {
+    counter-increment: nav;
+    content: counter(nav);
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+    font-size: 11.5px;
+    padding-top: 2px;
+  }
+  nav.index a:hover {
+    color: var(--accent);
+    background: var(--accent-wash);
+    border-left-color: var(--accent);
+  }
+  nav.index a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  /* ─── Prose ─────────────────────────────────────────────────────────── */
+
+  main { min-width: 0; }
+
+  section { margin-bottom: 56px; scroll-margin-top: 24px; }
+
+  h2 {
+    font-family: var(--sans);
+    font-size: 25px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+    margin: 0 0 6px;
+    text-wrap: balance;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  h2 .num {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    flex: none;
+  }
+
+  .rule {
+    height: 1px;
+    background: var(--border);
+    margin: 0 0 22px;
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-size: 17px;
+    font-weight: 600;
+    margin: 32px 0 8px;
+    color: var(--text);
+  }
+
+  h4 {
+    font-family: var(--mono);
+    font-size: 14.5px;
+    font-weight: 500;
+    margin: 26px 0 6px;
+    color: var(--crit);
+  }
+  h4.plain { color: var(--text); }
+
+  p, ul, ol { max-width: var(--measure); }
+  p { margin: 0 0 14px; }
+
+  ul, ol { margin: 0 0 14px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  li::marker { color: var(--text-3); }
+
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+  strong { font-weight: 600; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.87em;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.08em 0.34em;
+    word-break: break-word;
+  }
+
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    font-family: var(--mono);
+    font-size: 13.5px;
+    line-height: 1.6;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 0 0 18px;
+    border: 1px solid var(--border);
+  }
+  pre code {
+    background: none; border: none; padding: 0; font-size: inherit; color: inherit;
+    word-break: normal;
+  }
+  pre .c { color: var(--code-dim); }
+
+  /* ─── Tables ────────────────────────────────────────────────────────── */
+
+  .tw { overflow-x: auto; margin: 0 0 20px; }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 14px;
+    background: var(--surface);
+  }
+
+  th {
+    text-align: left;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    padding: 9px 12px;
+    border-bottom: 1.5px solid var(--border-str);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text-2);
+  }
+  td:first-child { color: var(--text); font-weight: 500; }
+  tr:last-child td { border-bottom: none; }
+  td code, th code { font-size: 12.5px; }
+  td.num { font-variant-numeric: tabular-nums; text-align: right; }
+
+  /* ─── Callouts ──────────────────────────────────────────────────────── */
+
+  .note {
+    max-width: var(--measure);
+    border-left: 3px solid var(--accent);
+    background: var(--accent-wash);
+    padding: 14px 18px;
+    margin: 0 0 20px;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    font-size: 16px;
+  }
+  .note p:last-child { margin-bottom: 0; }
+  .note.danger { border-left-color: var(--crit); background: var(--crit-wash); }
+  .note.caution { border-left-color: var(--warn); background: var(--warn-wash); }
+
+  .note .lbl {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 5px;
+    color: var(--accent-ink);
+  }
+  .note.danger .lbl { color: var(--crit); }
+  .note.caution .lbl { color: var(--warn); }
+
+  /* ─── Chips ─────────────────────────────────────────────────────────── */
+
+  .chip {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 1px 7px;
+    border-radius: 3px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .chip.ok   { color: var(--ok);   background: var(--ok-wash);   border-color: var(--ok); }
+  .chip.warn { color: var(--warn); background: var(--warn-wash); border-color: var(--warn); }
+  .chip.crit { color: var(--crit); background: var(--crit-wash); border-color: var(--crit); }
+  .chip.mut  { color: var(--text-3); background: var(--surface-2); border-color: var(--border-str); }
+
+  /* Colour swatch for the formatting legend */
+  .sw {
+    display: inline-block;
+    width: 11px; height: 11px;
+    border-radius: 2px;
+    margin-right: 7px;
+    vertical-align: -1px;
+    border: 1px solid rgba(0,0,0,.18);
+  }
+
+  /* ─── Fault entries ─────────────────────────────────────────────────── */
+
+  .fault {
+    border-top: 1px solid var(--border);
+    padding-top: 18px;
+    margin-top: 22px;
+  }
+  .fault dl {
+    max-width: var(--measure);
+    margin: 10px 0 0;
+    display: grid;
+    grid-template-columns: 62px 1fr;
+    gap: 4px 14px;
+  }
+  @media (max-width: 560px) {
+    .fault dl { grid-template-columns: 1fr; gap: 2px; }
+    .fault dt { padding-top: 10px; }
+  }
+  .fault dt {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    padding-top: 5px;
+  }
+  .fault dd { margin: 0; }
+  .fault dd p:last-child { margin-bottom: 0; }
+  .fault dd pre { margin-top: 8px; }
+
+  footer {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text-3);
+    max-width: none;
+  }
+  footer a { color: var(--text-2); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="masthead">
+    <p class="eyebrow">Operations Runbook</p>
+    <h1>Access Switch Audit</h1>
+    <p class="standfirst">
+      Running the Cisco access-switch audit, reading what it produces, and
+      recovering when a run fails.
+    </p>
+    <dl class="facts">
+      <div class="fact"><dt>Version</dt><dd><code>0.9.0</code></dd></div>
+      <div class="fact"><dt>Entry point</dt><dd><code>python -m switch_audit</code></dd></div>
+      <div class="fact"><dt>Default output</dt><dd><code>output/audit.xlsx</code></dd></div>
+      <div class="fact"><dt>Logs</dt><dd><code>logs/debug.log</code></dd></div>
+      <div class="fact"><dt>Change risk</dt><dd>Read-only</dd></div>
+    </dl>
+  </header>
+
+  <nav class="index" aria-label="Sections">
+    <h2>Sections</h2>
+    <ol>
+      <li><a href="#what">What this tool does</a></li>
+      <li><a href="#prereq">Prerequisites</a></li>
+      <li><a href="#setup">First-time setup</a></li>
+      <li><a href="#running">Running an audit</a></li>
+      <li><a href="#creds">Credentials</a></li>
+      <li><a href="#hostkeys">Host key verification</a></li>
+      <li><a href="#config">Configuration reference</a></li>
+      <li><a href="#collectors">Collectors</a></li>
+      <li><a href="#output">Reading the output</a></li>
+      <li><a href="#exit">Exit codes</a></li>
+      <li><a href="#trouble">Troubleshooting</a></li>
+      <li><a href="#health">Health checks</a></li>
+      <li><a href="#escalate">Escalation</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- 1 ─────────────────────────────────────────────────────────────── -->
+    <section id="what">
+      <h2><span class="num">01</span> What this tool does</h2>
+      <div class="rule"></div>
+      <p>
+        Connects to a list of Cisco switches — directly or through an SSH bastion —
+        collects interface, PoE, neighbour, VLAN and hardware data, and writes an
+        Excel workbook with a <code>SUMMARY</code> sheet, an <code>INVENTORY</code>
+        sheet, and one sheet per device.
+      </p>
+
+      <div class="note">
+        <span class="lbl">Change risk</span>
+        <p>
+          The audit is <strong>strictly read-only</strong>. It issues <code>show</code>
+          commands only and never alters configuration. <code>enable</code> is entered
+          only when <code>USE_ENABLE</code> is set.
+        </p>
+      </div>
+
+      <h3>Run it when you need to</h3>
+      <ul>
+        <li>Find reclaimable access ports before buying more switches</li>
+        <li>Produce a port-utilisation figure for a site</li>
+        <li>Inventory modules and optics with serial numbers, for RMAs or refresh planning</li>
+        <li>Spot access-layer drift — missing PortFast, non-standard config register, port-security violations</li>
+        <li>Check PoE headroom before deploying more phones, APs or cameras</li>
+      </ul>
+      <p>
+        <strong>Typical runtime</strong> is 20–40 seconds per device, ten in parallel
+        by default. A 200-switch estate takes roughly 10–15 minutes with all
+        collectors enabled.
+      </p>
+    </section>
+
+    <!-- 2 ─────────────────────────────────────────────────────────────── -->
+    <section id="prereq">
+      <h2><span class="num">02</span> Prerequisites</h2>
+      <div class="rule"></div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Requirement</th><th>Detail</th></tr></thead>
+          <tbody>
+            <tr><td>Python</td><td>3.10 or later. Windows users can skip this — <code>setup.bat</code> downloads a private 3.12 runtime.</td></tr>
+            <tr><td>Network path</td><td>TCP/22 to the bastion, or to every device when running <code>--direct</code>.</td></tr>
+            <tr><td>Credentials</td><td>A read-only account able to run <code>show</code> commands on every device.</td></tr>
+            <tr><td>Disk</td><td>~200&nbsp;MB for dependencies, plus workbook and log space.</td></tr>
+            <tr><td>Excel</td><td>Anything that opens <code>.xlsx</code>. LibreOffice works; conditional formatting is preserved.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        A read-only TACACS or RADIUS account is sufficient and recommended.
+        <code>enable</code> is needed only if <code>show</code> commands are
+        restricted at privilege level 1.
+      </p>
+    </section>
+
+    <!-- 3 ─────────────────────────────────────────────────────────────── -->
+    <section id="setup">
+      <h2><span class="num">03</span> First-time setup</h2>
+      <div class="rule"></div>
+
+      <h3>Windows</h3>
+      <pre><code>setup.bat</code></pre>
+      <p>
+        Downloads the Python 3.12.9 embeddable runtime into
+        <code>python_runtime\</code>, installs pip, then installs dependencies.
+        Needs internet access once. <code>run.bat</code> calls it automatically
+        when <code>python_runtime\</code> is missing.
+      </p>
+
+      <h3>Linux, WSL and macOS</h3>
+      <pre><code>./setup.sh</code></pre>
+      <p>Creates <code>.venv/</code> and installs dependencies. Needs Python 3.10+ already present.</p>
+
+      <h3>Developer install</h3>
+      <pre><code>pip install -e ".[dev]"
+pytest -q</code></pre>
+
+      <div class="note">
+        <span class="lbl">Reproducible installs</span>
+        <p>
+          Both installers prefer <code>requirements.lock.txt</code> when it is
+          present — a cross-platform pinned lock. Delete it to float to the newest
+          compatible releases. Regenerate with:
+        </p>
+        <pre><code>uv pip compile requirements.txt --universal \
+  --python-version 3.10 --output-file requirements.lock.txt</code></pre>
+      </div>
+
+      <h3>Verify the install</h3>
+      <pre><code>python -m switch_audit --version
+python -m switch_audit --list-collectors</code></pre>
+      <p>Both print and exit <code>0</code> without touching the network.</p>
+    </section>
+
+    <!-- 4 ─────────────────────────────────────────────────────────────── -->
+    <section id="running">
+      <h2><span class="num">04</span> Running an audit</h2>
+      <div class="rule"></div>
+
+      <h3>Interactive — recommended for ad-hoc runs</h3>
+      <pre><code>run.bat          <span class="c">:: Windows</span>
+./run.sh         <span class="c"># Linux / WSL / macOS</span></code></pre>
+      <p>
+        Opens a full-screen form: device file, output name, stale threshold, worker
+        count, credentials, jump host. Live statistics and a log pane during the
+        run, a summary screen at the end. <code>Ctrl+Q</code> quits.
+      </p>
+
+      <h3>Command line</h3>
+      <pre><code><span class="c"># Use the jump host from config.yaml</span>
+python -m switch_audit --devices devices.txt --output output/site-a.xlsx
+
+<span class="c"># Direct connections, no bastion</span>
+python -m switch_audit --devices devices.txt --direct
+
+<span class="c"># Override the bastion for one run</span>
+python -m switch_audit --devices devices.txt --jump-host bastion.example.com
+
+<span class="c"># Higher concurrency, 60-day stale threshold</span>
+python -m switch_audit --devices devices.txt --workers 20 --stale-days 60
+
+<span class="c"># Verbose, for diagnosing a problem run</span>
+python -m switch_audit --devices devices.txt --debug</code></pre>
+
+      <h3>Unattended and scheduled</h3>
+      <div class="note caution">
+        <span class="lbl">Always pass --non-interactive</span>
+        <p>
+          Without it, a missing credential leaves the process waiting on a prompt
+          that no one will ever answer.
+        </p>
+      </div>
+
+      <pre><code>SWITCH_USER=svc-audit SWITCH_PASS=... \
+  python -m switch_audit --devices devices.txt \
+    --output "output/audit-$(date +%F).xlsx" --non-interactive</code></pre>
+
+      <p><strong>Windows Task Scheduler.</strong> Store the credential once, then reference it:</p>
+      <pre><code>cmdkey /generic:SwitchAudit/User /user:svc-audit /pass</code></pre>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Field</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td>Program</td><td><code>C:\path\to\python_runtime\python.exe</code></td></tr>
+            <tr><td>Arguments</td><td><code>-m switch_audit --devices devices.txt --non-interactive</code></td></tr>
+            <tr><td>Start in</td><td><code>C:\path\to\Access_Switch_Audit</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <strong>Start in</strong> matters: <code>config.yaml</code>,
+        <code>devices.txt</code>, <code>logs\</code> and <code>output\</code> are all
+        resolved relative to the working directory.
+      </p>
+
+      <p><strong>cron:</strong></p>
+      <pre><code>0 2 * * 1 cd /opt/switch-audit &amp;&amp; ./.venv/bin/python -m switch_audit \
+  --devices devices.txt --output "output/audit-$(date +\%F).xlsx" \
+  --non-interactive &gt;&gt; logs/cron.log 2&gt;&amp;1</code></pre>
+
+      <h3>The device list</h3>
+      <p>One IP or hostname per line. Blank lines and <code>#</code> comments are ignored.</p>
+      <pre><code><span class="c"># Site A — access layer</span>
+192.0.2.11
+192.0.2.12
+access-sw-03.example.com</code></pre>
+    </section>
+
+    <!-- 5 ─────────────────────────────────────────────────────────────── -->
+    <section id="creds">
+      <h2><span class="num">05</span> Credentials</h2>
+      <div class="rule"></div>
+      <p>Resolved in this order. The first complete pair wins.</p>
+      <ol>
+        <li><code>SWITCH_USER</code> / <code>SWITCH_PASS</code></li>
+        <li><code>CREDENTIAL_USER</code> / <code>CREDENTIAL_PASS</code></li>
+        <li>Windows Credential Manager, target from <code>credentials.target</code> in <code>config.yaml</code> (override with <code>CREDENTIAL_TARGET</code>)</li>
+        <li>Interactive prompt — <strong>suppressed by <code>--non-interactive</code></strong></li>
+      </ol>
+      <p>
+        A <code>.env</code> file in the working directory is loaded automatically at
+        start-up. Variables already set in your shell always win. Copy
+        <code>.env.example</code> to <code>.env</code>.
+      </p>
+      <pre><code>SWITCH_USER=svc-audit
+SWITCH_PASS=your_password
+USE_ENABLE=false
+<span class="c"># ENABLE_SECRET=...</span></code></pre>
+
+      <div class="note">
+        <span class="lbl">Handling</span>
+        <p>
+          <code>.env</code> is gitignored. Credentials are never written to disk by
+          the tool, never exported into the process environment, and never logged.
+        </p>
+      </div>
+
+      <h3>Enable mode</h3>
+      <p>
+        Used only when <code>USE_ENABLE</code> is truthy (<code>1</code>,
+        <code>true</code>, <code>yes</code>, <code>y</code>) <em>and</em>
+        <code>ENABLE_SECRET</code> is set. If <code>USE_ENABLE</code> is set but the
+        secret is empty, the tool logs a warning and continues at whatever privilege
+        the login provides.
+      </p>
+    </section>
+
+    <!-- 6 ─────────────────────────────────────────────────────────────── -->
+    <section id="hostkeys">
+      <h2><span class="num">06</span> SSH host key verification</h2>
+      <div class="rule"></div>
+      <p>Set under <code>security:</code> in <code>config.yaml</code>. Applies to the bastion <em>and</em> every device.</p>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Policy</th><th>Behaviour</th><th>Use when</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="chip ok">strict</span></td>
+              <td>Only hosts already in <code>known_hosts</code> are accepted.</td>
+              <td>Hardened environments with a managed <code>known_hosts</code>.</td>
+            </tr>
+            <tr>
+              <td><span class="chip mut">auto-add</span></td>
+              <td>Trust on first use. Unknown hosts accepted and recorded; a <strong>changed</strong> key is refused.</td>
+              <td>Normal operation. This is the default.</td>
+            </tr>
+            <tr>
+              <td><span class="chip crit">insecure</span></td>
+              <td>Accept any key, remember nothing.</td>
+              <td>Lab only.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <pre><code>security:
+  host_key_policy: auto-add
+  known_hosts: null        <span class="c"># null = ~/.ssh/known_hosts</span>
+  save_host_keys: true</code></pre>
+
+      <p>
+        Environment overrides: <code>SWITCH_AUDIT_HOST_KEY_POLICY</code>,
+        <code>SWITCH_AUDIT_KNOWN_HOSTS</code>.
+      </p>
+
+      <div class="note">
+        <span class="lbl">Known limitation</span>
+        <p>
+          Netmiko does not write host keys back, so under <code>auto-add</code> a
+          <strong>device</strong> key is verified only once it is already recorded.
+          The bastion key — shared by every connection in the run — is recorded on
+          first use.
+        </p>
+      </div>
+
+      <p>To pre-populate for <code>strict</code>:</p>
+      <pre><code>ssh-keyscan -H bastion.example.com &gt;&gt; ~/.ssh/known_hosts
+ssh-keyscan -H -f devices.txt &gt;&gt; ~/.ssh/known_hosts</code></pre>
+    </section>
+
+    <!-- 7 ─────────────────────────────────────────────────────────────── -->
+    <section id="config">
+      <h2><span class="num">07</span> Configuration reference</h2>
+      <div class="rule"></div>
+      <p>
+        <code>config.yaml</code> in the working directory, or the path in
+        <code>SWITCH_AUDIT_CONFIG</code>. If no file is found, the tool logs a
+        warning and uses built-in defaults.
+      </p>
+      <p>
+        Every value is validated at startup. A wrong type, an out-of-range number or
+        a misspelt policy stops the run before anything is contacted, with exit
+        <code>2</code> and a message naming the key. Environment overrides are
+        checked the same way. Unknown keys are only warned about. To see the values
+        the tool will actually use:
+      </p>
+      <pre><code>python -m switch_audit --show-config</code></pre>
+      <p>
+        <code>config.yaml</code> references <code>config.schema.json</code>, so
+        VS Code (with the YAML extension) completes keys and flags bad values while
+        you edit.
+      </p>
+
+      <h3>Connection</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Key</th><th>Default</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td><code>jump_host</code></td><td class="num">—</td><td>Bastion address. <code>null</code> for direct. Env: <code>JUMP_HOST</code></td></tr>
+            <tr><td><code>connection.timeout</code></td><td class="num">25</td><td>TCP and auth timeout, seconds. Env: <code>CONNECTION_TIMEOUT</code></td></tr>
+            <tr><td><code>connection.banner_timeout</code></td><td class="num">30</td><td>SSH banner negotiation</td></tr>
+            <tr><td><code>connection.read_timeout</code></td><td class="num">60</td><td>Per-command read timeout. Raise for large chassis.</td></tr>
+            <tr><td><code>connection.retries</code></td><td class="num">3</td><td>Attempts per device</td></tr>
+            <tr><td><code>connection.retry_base_wait</code></td><td class="num">1</td><td>Backoff is <code>base × 2ⁿ</code>, capped at 30s → 1s, 2s, 4s</td></tr>
+            <tr><td><code>concurrency.default_workers</code></td><td class="num">10</td><td>Parallel device sessions</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Audit behaviour</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Key</th><th>Default</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td><code>audit.default_stale_days</code></td><td class="num">30</td><td><code>0</code> disables stale flagging</td></tr>
+            <tr><td><code>audit.stale.include_admin_down</code></td><td class="num">false</td><td>Count admin-down ports as stale</td></tr>
+            <tr><td><code>audit.stale.use_mac_table</code></td><td class="num">true</td><td>Learned MACs prove a port is in use</td></tr>
+            <tr><td><code>audit.enable_port_categorization</code></td><td class="num">true</td><td>Adds the <code>Port Category</code> column</td></tr>
+            <tr><td><code>audit.mac_addresses_per_port</code></td><td class="num">5</td><td>MACs listed per port before truncating</td></tr>
+            <tr><td><code>audit.oui_file</code></td><td class="num">null</td><td>CSV of <code>oui,vendor</code> extending the built-in table</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Output and environment</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Setting</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>output.default_filename</code></td><td><code>output/audit.xlsx</code></td></tr>
+            <tr><td><code>output.min_column_width</code> / <code>max_column_width</code></td><td><code>8</code> / <code>60</code> characters</td></tr>
+            <tr><td><code>SWITCH_AUDIT_CONFIG</code></td><td>Alternate <code>config.yaml</code> path</td></tr>
+            <tr><td><code>LOG_DIR</code></td><td>Log directory, default <code>logs</code></td></tr>
+            <tr><td><code>LOGGING_CONFIG</code></td><td>Logging INI file, overriding the built-in setup</td></tr>
+            <tr><td><code>NET_TEXTFSM</code></td><td>TextFSM template directory, if not using the bundled templates</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 8 ─────────────────────────────────────────────────────────────── -->
+    <section id="collectors">
+      <h2><span class="num">08</span> Collectors</h2>
+      <div class="rule"></div>
+      <p>
+        Each collector runs one extra <code>show</code> command and adds columns.
+        Switch them under <code>collectors:</code> in <code>config.yaml</code>.
+        Disable what you don't need to shorten the run.
+      </p>
+      <pre><code>python -m switch_audit --list-collectors</code></pre>
+
+      <h3>Per-port</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Collector</th><th>Command</th><th>Default</th><th>Adds</th></tr></thead>
+          <tbody>
+            <tr><td><code>switchport</code></td><td><code>show interfaces switchport</code></td><td><span class="chip ok">on</span></td><td>Admin Mode, Access VLAN, <strong>Voice VLAN</strong>, Native VLAN, Trunk VLANs</td></tr>
+            <tr><td><code>mac_table</code></td><td><code>show mac address-table</code></td><td><span class="chip ok">on</span></td><td>MAC Count, MAC Addresses, MAC Vendors, MAC VLANs</td></tr>
+            <tr><td><code>vlans</code></td><td><code>show vlan</code></td><td><span class="chip ok">on</span></td><td>VLAN Name, VLANs Defined and Active</td></tr>
+            <tr><td><code>spanning_tree</code></td><td><code>show spanning-tree</code></td><td><span class="chip ok">on</span></td><td>STP Role, State, Type, <strong>STP Edge</strong> (PortFast)</td></tr>
+            <tr><td><code>transceivers</code></td><td><code>show interfaces transceiver</code></td><td><span class="chip ok">on</span></td><td>Optic Temp, Voltage, Tx and Rx dBm</td></tr>
+            <tr><td><code>dot1x</code></td><td><code>show authentication sessions</code></td><td><span class="chip mut">off</span></td><td>Auth Method, Domain, Status, MAC</td></tr>
+            <tr><td><code>etherchannel</code></td><td><code>show etherchannel summary</code></td><td><span class="chip mut">off</span></td><td>Port-Channel membership and state</td></tr>
+            <tr><td><code>port_security</code></td><td><code>show port-security</code></td><td><span class="chip mut">off</span></td><td>PortSec Max, Current, Violations, Action</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Device level</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Collector</th><th>Command</th><th>Default</th><th>Adds</th></tr></thead>
+          <tbody>
+            <tr><td><code>version_detail</code></td><td><code>show version</code></td><td><span class="chip ok">on</span></td><td>Uptime, Reload Reason, Config Register, ROMMON, stack members</td></tr>
+            <tr><td><code>inventory</code></td><td><code>show inventory</code></td><td><span class="chip ok">on</span></td><td>The <code>INVENTORY</code> sheet — module and optic serials</td></tr>
+            <tr><td><code>environment</code></td><td><code>show environment power all</code></td><td><span class="chip ok">on</span></td><td>PSUs Present and OK, Inlet Temp, Temp Status</td></tr>
+            <tr><td><code>poe_budget</code></td><td><code>show power inline</code></td><td><span class="chip ok">on</span></td><td>PoE Available, Used, Remaining watts and Used %</td></tr>
+            <tr><td><code>cpu_memory</code></td><td><code>show processes cpu</code></td><td><span class="chip mut">off</span></td><td>CPU 5s, 1m and 5m %</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <span class="lbl">Failure behaviour</span>
+        <p>
+          Every collector is best-effort. A platform that doesn't implement a
+          command — a non-PoE switch, a device with no optics — contributes nothing
+          and never fails the device.
+        </p>
+      </div>
+    </section>
+
+    <!-- 9 ─────────────────────────────────────────────────────────────── -->
+    <section id="output">
+      <h2><span class="num">09</span> Reading the output</h2>
+      <div class="rule"></div>
+
+      <h3>SUMMARY sheet</h3>
+      <p>
+        One row per device including failures, plus a <code>TOTAL</code> row. Count
+        columns are summed, percentages are recomputed from those sums, and
+        temperature and CPU take the peak rather than a sum.
+      </p>
+      <ul>
+        <li><code>Audit Result</code> — <code>OK</code>, <code>ERROR</code> or <code>NO DATA</code></li>
+        <li><code>Error</code> — the failure reason, blank on success</li>
+        <li><code>Total Ports (phy)</code>, <code>Access / Trunk / Routed Ports</code></li>
+        <li><code>Connected</code>, <code>Not Connected</code>, <code>Admin Down</code>, <code>Err-Disabled</code></li>
+        <li><code>Stale Ports</code>, <code>Ports w/ Errors</code>, <code>PoE Active Ports</code></li>
+        <li><code>Uptime</code>, <code>Config Register</code>, <code>Reload Reason</code></li>
+        <li><code>PoE Available / Used / Remaining (W)</code>, <code>PoE Used %</code></li>
+        <li><code>PSUs Present / OK</code>, <code>Inlet Temp (C)</code></li>
+      </ul>
+
+      <h3>Per-device sheets</h3>
+      <p>
+        One row per interface, around 43 columns with all collectors on. Frozen
+        header and an auto-filter on every column. <code>Port Category</code> is the
+        fastest triage column:
+      </p>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Value</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>connected</code></td><td>Up and in use</td></tr>
+            <tr><td><code>powered-device</code></td><td>Up and drawing PoE</td></tr>
+            <tr><td><code>available</code></td><td>Down, no evidence of use, below the stale threshold</td></tr>
+            <tr><td><code>stale-unused</code></td><td>Down and meets the stale criteria — a reclaim candidate</td></tr>
+            <tr><td><code>disabled</code></td><td>Administratively down</td></tr>
+            <tr><td><code>error</code></td><td>err-disabled</td></tr>
+            <tr><td><code>trunk/routed</code></td><td>Not an access port</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>INVENTORY sheet</h3>
+      <p>
+        Every module and pluggable optic across all devices with PID, VID and serial
+        — what you need for an RMA.
+      </p>
+
+      <h3>Conditional formatting</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Colour</th><th>Applied to</th></tr></thead>
+          <tbody>
+            <tr><td><span class="sw" style="background:#C6EFCE"></span>Green</td><td><code>Status = connected</code>, PoE power &gt; 0</td></tr>
+            <tr><td><span class="sw" style="background:#FFC7CE"></span>Red</td><td><code>notconnect</code>, <code>err-disabled</code>, any error counter &gt; 0, stale = TRUE, port-security violations &gt; 0, PoE Used % &gt; 85</td></tr>
+            <tr><td><span class="sw" style="background:#FFEB9C"></span>Amber</td><td>PoE Used % 70–85, <code>Config Register OK</code> = FALSE, <code>STP Edge</code> = FALSE</td></tr>
+            <tr><td><span class="sw" style="background:#D9D9D9"></span>Grey</td><td><code>administratively down</code>, MAC Count = 0</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>How stale is decided</h3>
+      <p>Only for <strong>access</strong> ports, and only when <code>--stale-days &gt; 0</code>.</p>
+      <ul>
+        <li>Administratively down or err-disabled → <strong>never stale</strong>; they are reported under their own category. Override with <code>audit.stale.include_admin_down</code>.</li>
+        <li><code>connected</code> → stale if <code>Last input ≥ N days</code>.</li>
+        <li>Otherwise → stale only if <strong>all</strong> hold: no PoE draw, no LLDP/CDP neighbour, and no learned MACs. The MAC check needs the <code>mac_table</code> collector; disable it with <code>audit.stale.use_mac_table: false</code>.</li>
+      </ul>
+    </section>
+
+    <!-- 10 ────────────────────────────────────────────────────────────── -->
+    <section id="exit">
+      <h2><span class="num">10</span> Exit codes</h2>
+      <div class="rule"></div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Code</th><th>Meaning</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="chip ok">0</span></td>
+              <td>At least one device audited successfully. The workbook was written.</td>
+              <td>Check <code>SUMMARY</code> for <code>ERROR</code> rows.</td>
+            </tr>
+            <tr>
+              <td><span class="chip crit">1</span></td>
+              <td>Fatal error, or every device failed.</td>
+              <td>See <a href="#trouble">Troubleshooting</a>.</td>
+            </tr>
+            <tr>
+              <td><span class="chip crit">2</span></td>
+              <td><code>config.yaml</code> or an environment override is invalid. Nothing ran.</td>
+              <td>Fix the key named in the message.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        A run where <em>some</em> devices fail still exits <code>0</code> and still
+        writes the workbook — partial success is success. Failed devices appear in
+        <code>SUMMARY</code> with <code>Audit Result = ERROR</code> and a reason in
+        <code>Error</code>.
+      </p>
+      <div class="note">
+        <span class="lbl">Monitoring</span>
+        <p>
+          Alert on exit <code>1</code>, and on the <code>ERROR</code> row count
+          exceeding your tolerance. Exit <code>0</code> alone does not mean every
+          device was reached.
+        </p>
+      </div>
+    </section>
+
+    <!-- 11 ────────────────────────────────────────────────────────────── -->
+    <section id="trouble">
+      <h2><span class="num">11</span> Troubleshooting</h2>
+      <div class="rule"></div>
+      <p>
+        Logs are in <code>logs/debug.log</code> — rotating, 5&nbsp;MB × 5. Re-run
+        with <code>--debug</code> for verbose console output.
+      </p>
+
+      <div class="fault">
+        <h4>Configuration error: Invalid configuration in … <span class="chip crit">exit 2</span></h4>
+        <dl>
+          <dt>Cause</dt>
+          <dd><p>A value in <code>config.yaml</code>, or an environment override, failed validation. Each problem is listed with its key, for example <code>connection.timeout (from CONNECTION_TIMEOUT): Input should be a valid integer</code>.</p></dd>
+          <dt>Fix</dt>
+          <dd><p>Correct the value, or unset the variable named in brackets, then confirm with <code>python -m switch_audit --show-config</code>.</p></dd>
+        </dl>
+      </div>
+
+      <div class="fault">
+        <h4>No devices were audited successfully <span class="chip crit">exit 1</span></h4>
+        <dl>
+          <dt>Cause</dt>
+          <dd><p>Every device failed. The lines immediately above list each device and its reason.</p></dd>
+          <dt>Fix</dt>
+          <dd>
+            <p>
+              <strong><code>Authentication failed</code></strong> — wrong credentials, or the
+              account is locked. Verify by hand with <code>ssh svc-audit@&lt;device&gt;</code>.
+              If you use a bastion, check whether repeated runs locked the account.
+            </p>
+            <p>
+              <strong><code>TCP connection to device failed</code></strong> — no network path,
+              or an ACL. Check reachability from the host actually running the audit.
+            </p>
+            <p>
+              Confirm which credential source was used — the log records
+              <code>Using credentials from SWITCH_USER / SWITCH_PASS</code> or
+              <code>Found stored credentials for … (target: …)</code>.
+            </p>
+          </dd>
+        </dl>
+      </div>
+
+      <div class="fault">
+        <h4>Cannot reach jump host X <span class="chip crit">exit 1</span></h4>
+        <dl>
+          <dt>Cause</dt>
+          <dd><p>The bastion is unreachable or rejected authentication. The run stops before dialling any device.</p></dd>
+          <dt>Fix</dt>
+          <dd>
+            <pre><code>ssh -v svc-audit@bastion.example.com</code></pre>
+            <p>If the bastion is fine by hand but not here, check <code>security.host_key_policy</code> and whether the key changed.</p>
+          </dd>
+        </dl>
+      </div>
+
+      <div class="fault">
+        <h4>Host key mismatch</h4>
+        <dl>
+          <dt>Symptom</dt>
+          <dd><pre><code>Host key mismatch for jump host X: the server presented a key
+that does not match the one recorded in known_hosts.</code></pre></dd>
+          <dt>Cause</dt>
+          <dd><p>The host was rebuilt — or the connection is being intercepted.</p></dd>
+          <dt>Fix</dt>
+          <dd>
+            <div class="note danger">
+              <span class="lbl">Verify before clearing</span>
+              <p>Confirm the new fingerprint out of band before removing anything. Clearing the entry to "make it work" defeats the check entirely.</p>
+            </div>
+            <pre><code>ssh-keygen -R bastion.example.com</code></pre>
+          </dd>
+        </dl>
+      </div>
+
+      <div class="fault">
+        <h4>host_key_policy is 'strict' but no known_hosts file was found</h4>
+        <dl>
+          <dt>Fix</dt>
+          <dd><p>Populate it with <code>ssh-keyscan</code> (see <a href="#hostkeys">§6</a>), point <code>security.known_hosts</code> at the right file, or switch to <code>auto-add</code>.</p></dd>
+        </dl>
+      </div>
+
+      <div class="fault">
+        <h4>No credentials available and prompting is disabled</h4>
+        <dl>
+          <dt>Cause</dt>
+          <dd><p><code>--non-interactive</code> with nothing to use.</p></dd>
+          <dt>Fix</dt>
+          <dd>
+            <p>
+              Set <code>SWITCH_USER</code> / <code>SWITCH_PASS</code>, or store the
+              credential under the <code>credentials.target</code> name. Under Task
+              Scheduler, remember Credential Manager entries are <strong>per-user</strong> —
+              store them as the account the task runs as.
+            </p>
+          </dd>
+        </dl>
+      </div>
+
+      <div class="fault">
+        <h4>Devices file not found / No devices found in …</h4>
+        <dl>
+          <dt>Fix</dt>
+          <dd><p>Wrong path, or the file is all comments and blanks. Paths are relative to the working directory — for a scheduled task, that is the <strong>Start in</strong> field.</p></dd>
+        </dl>
+      </div>
+
+      <div class="fault">
+        <h4 class="plain">&lt;path&gt; is locked (is it open in Excel?) — writing to &lt;path&gt;_&lt;timestamp&gt;.xlsx</h4>
+        <dl>
+          <dt>Cause</dt>
+          <dd><p>Not an error. The run completed; the workbook was open in Excel, so results were written alongside it rather than lost.</p></dd>
+          <dt>Fix</dt>
+          <dd><p>Close Excel before the next run.</p></dd>
+        </dl>
+      </div>
+
+      <div class="fault">
+        <h4>Audit Result = NO DATA</h4>
+        <dl>
+          <dt>Cause</dt>
+          <dd><p>The device was reached but no interface records could be parsed — usually <code>show interfaces</code> timing out or returning unparsed output.</p></dd>
+          <dt>Fix</dt>
+          <dd>
+            <ul>
+              <li>Raise <code>connection.read_timeout</code>; large stacks can take well over 60&nbsp;s.</li>
+              <li>Look for <code>'show interfaces' returned unparsed output; is the TextFSM template available?</code> in the log — that points at TextFSM, not the device.</li>
+            </ul>
+          </dd>
+        </dl>
+      </div>
+
+      <div class="fault">
+        <h4 class="plain">Missing TextFSM templates</h4>
+        <dl>
+          <dt>Fix</dt>
+          <dd><p>Templates ship with Netmiko via <code>ntc-templates</code>. If they are missing, reinstall dependencies, or set <code>NET_TEXTFSM</code> to a template directory.</p></dd>
+        </dl>
+      </div>
+
+      <div class="fault">
+        <h4 class="plain">Expected columns are missing</h4>
+        <dl>
+          <dt>Cause</dt>
+          <dd><p>The collector is off, or the platform doesn't support the command.</p></dd>
+          <dt>Fix</dt>
+          <dd><p>Check <code>--list-collectors</code>, then search the log for the command name — a rejected command is recorded at DEBUG level.</p></dd>
+        </dl>
+      </div>
+
+      <div class="fault">
+        <h4 class="plain">The run is too slow</h4>
+        <dl>
+          <dt>Fix</dt>
+          <dd>
+            <ol>
+              <li>Raise <code>--workers</code>. 20–30 is reasonable; the bastion is usually the limit, not the host.</li>
+              <li>Turn off collectors you don't need — each is one extra command per device.</li>
+              <li>Lower <code>connection.read_timeout</code> if failures are dominated by unreachable devices.</li>
+              <li>Lower <code>connection.retries</code> for a fast inventory sweep.</li>
+            </ol>
+          </dd>
+        </dl>
+      </div>
+
+      <div class="fault">
+        <h4 class="plain">The stale count looks wrong</h4>
+        <dl>
+          <dt>Cause</dt>
+          <dd>
+            <p>
+              Usually <code>mac_table</code> is disabled, so occupied ports look idle
+              — or <code>audit.stale.include_admin_down</code> doesn't match your
+              policy. Review the rules in <a href="#output">§9</a>.
+            </p>
+            <p>
+              <code>Stale Ports</code> in <code>SUMMARY</code> always equals the number
+              of ports categorised <code>stale-unused</code>. If they disagree, that is
+              a bug worth reporting.
+            </p>
+          </dd>
+        </dl>
+      </div>
+
+      <div class="fault">
+        <h4 class="plain">Account lockouts</h4>
+        <dl>
+          <dt>Cause</dt>
+          <dd>
+            <p>
+              The audit opens <strong>one</strong> bastion session per run and
+              multiplexes device channels through it, so a run costs a single bastion
+              login. Persistent lockouts usually mean overlapping scheduled runs.
+            </p>
+          </dd>
+        </dl>
+      </div>
+    </section>
+
+    <!-- 12 ────────────────────────────────────────────────────────────── -->
+    <section id="health">
+      <h2><span class="num">12</span> Health checks</h2>
+      <div class="rule"></div>
+      <p>Run after any change to the tool, Python, or the environment.</p>
+      <pre><code>python -m switch_audit --version          <span class="c"># metadata loads</span>
+python -m switch_audit --show-config      <span class="c"># config validates</span>
+python -m switch_audit --devices one-device.txt \
+    --output /tmp/smoke.xlsx --debug      <span class="c"># end to end</span>
+pytest -q                                 <span class="c"># 165 tests, with [dev]</span></code></pre>
+      <p>A single-device run against a known-good switch is the fastest end-to-end check.</p>
+    </section>
+
+    <!-- 13 ────────────────────────────────────────────────────────────── -->
+    <section id="escalate">
+      <h2><span class="num">13</span> Escalation</h2>
+      <div class="rule"></div>
+      <p>Collect before escalating:</p>
+      <ul>
+        <li><code>logs/debug.log</code> — the failing run's section</li>
+        <li>The exact command line, and whether <code>--direct</code> was used</li>
+        <li><code>config.yaml</code> with <code>jump_host</code> and <code>credentials.target</code> <strong>redacted</strong></li>
+        <li>The generated workbook, if one was produced</li>
+        <li>Output of <code>python -m switch_audit --version</code></li>
+      </ul>
+
+      <div class="note danger">
+        <span class="lbl">Handle the workbook as sensitive</span>
+        <p>
+          It contains serial numbers, MAC addresses, VLAN names and topology detail.
+          Treat it at the same level as a configuration backup.
+        </p>
+      </div>
+
+      <p>
+        Repository:
+        <a href="https://github.com/Nautomation-Prime/Access_Switch_Audit">Nautomation-Prime/Access_Switch_Audit</a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/Nautomation-Prime/Access_Switch_Audit/issues">Issues</a>
+      </p>
+    </section>
+
+  </main>
+
+  <footer>
+    Access Switch Audit 0.9.0 — operations runbook. Apache-2.0.
+    Source of truth for this document: <code>docs/RUNBOOK.md</code>.
+  </footer>
+
+</div>
+
+</body>
+</html>

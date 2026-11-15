@@ -1,0 +1,13 @@
+# Normalise line endings so a Windows checkout cannot break the Linux launchers.
+* text=auto eol=lf
+
+# Shell scripts must keep LF: CRLF yields "bad interpreter" on Linux/WSL.
+*.sh text eol=lf
+
+# Windows batch files need CRLF.
+*.bat text eol=crlf
+
+# Binary / generated
+*.xlsx binary
+*.pyd binary
+*.dll binary

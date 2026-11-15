@@ -1,0 +1,284 @@
+{
+  "$defs": {
+    "AuditSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "default_stale_days": {
+          "default": 30,
+          "description": "Days of inactivity after which an access port is stale; 0 disables stale detection.",
+          "minimum": 0,
+          "title": "Default Stale Days",
+          "type": "integer"
+        },
+        "enable_port_categorization": {
+          "default": true,
+          "description": "Label every access port with a category in the report.",
+          "title": "Enable Port Categorization",
+          "type": "boolean"
+        },
+        "error_threshold": {
+          "default": 100,
+          "description": "Interface error count above which a port is highlighted.",
+          "minimum": 0,
+          "title": "Error Threshold",
+          "type": "integer"
+        },
+        "stale": {
+          "$ref": "#/$defs/StaleSettings",
+          "description": "Stale detection tuning."
+        },
+        "mac_addresses_per_port": {
+          "default": 5,
+          "description": "Learned MAC addresses listed per port before truncating.",
+          "exclusiveMinimum": 0,
+          "title": "Mac Addresses Per Port",
+          "type": "integer"
+        },
+        "oui_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional CSV ('oui,vendor' per line) extending the built-in MAC vendor table.",
+          "title": "Oui File"
+        }
+      },
+      "title": "AuditSettings",
+      "type": "object"
+    },
+    "ConcurrencySettings": {
+      "additionalProperties": false,
+      "properties": {
+        "default_workers": {
+          "default": 10,
+          "description": "Devices audited concurrently.",
+          "exclusiveMinimum": 0,
+          "title": "Default Workers",
+          "type": "integer"
+        }
+      },
+      "title": "ConcurrencySettings",
+      "type": "object"
+    },
+    "ConnectionSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "timeout": {
+          "default": 25,
+          "description": "SSH connection establishment timeout (seconds). Env override: CONNECTION_TIMEOUT.",
+          "exclusiveMinimum": 0,
+          "title": "Timeout",
+          "type": "integer"
+        },
+        "banner_timeout": {
+          "default": 30,
+          "description": "SSH banner negotiation timeout (seconds).",
+          "exclusiveMinimum": 0,
+          "title": "Banner Timeout",
+          "type": "integer"
+        },
+        "read_timeout": {
+          "default": 60,
+          "description": "Show-command read timeout (seconds).",
+          "exclusiveMinimum": 0,
+          "title": "Read Timeout",
+          "type": "integer"
+        },
+        "retries": {
+          "default": 3,
+          "description": "Connection attempts per device before it is reported as failed.",
+          "minimum": 0,
+          "title": "Retries",
+          "type": "integer"
+        },
+        "retry_base_wait": {
+          "default": 1.0,
+          "description": "Base delay for exponential backoff (seconds). Wait = retry_base_wait * 2^(attempt - 1), capped at 30s.",
+          "minimum": 0,
+          "title": "Retry Base Wait",
+          "type": "number"
+        }
+      },
+      "title": "ConnectionSettings",
+      "type": "object"
+    },
+    "CredentialSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "default": "MyApp/ADM",
+          "description": "Windows Credential Manager target holding the SSH username and password. Env override: CRED_TARGET or CREDENTIAL_TARGET.",
+          "minLength": 1,
+          "title": "Target",
+          "type": "string"
+        }
+      },
+      "title": "CredentialSettings",
+      "type": "object"
+    },
+    "OutputSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "default_filename": {
+          "default": "audit.xlsx",
+          "description": "Default output workbook (overridden by --output).",
+          "minLength": 1,
+          "title": "Default Filename",
+          "type": "string"
+        },
+        "min_column_width": {
+          "default": 8,
+          "description": "Minimum Excel column width (characters).",
+          "exclusiveMinimum": 0,
+          "title": "Min Column Width",
+          "type": "integer"
+        },
+        "max_column_width": {
+          "default": 60,
+          "description": "Maximum Excel column width (characters).",
+          "exclusiveMinimum": 0,
+          "title": "Max Column Width",
+          "type": "integer"
+        }
+      },
+      "title": "OutputSettings",
+      "type": "object"
+    },
+    "SecuritySettings": {
+      "additionalProperties": false,
+      "properties": {
+        "host_key_policy": {
+          "default": "auto-add",
+          "description": "How SSH host keys are verified: strict (known_hosts only), auto-add (trust on first use, reject changed keys) or insecure (accept anything). Env override: SWITCH_AUDIT_HOST_KEY_POLICY.",
+          "enum": [
+            "strict",
+            "auto-add",
+            "insecure"
+          ],
+          "title": "Host Key Policy",
+          "type": "string"
+        },
+        "known_hosts": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "known_hosts file to verify against; null uses ~/.ssh/known_hosts. Supports ~ and environment variables. Env override: SWITCH_AUDIT_KNOWN_HOSTS.",
+          "title": "Known Hosts"
+        },
+        "save_host_keys": {
+          "default": true,
+          "description": "Write newly accepted keys back to known_hosts (auto-add only).",
+          "title": "Save Host Keys",
+          "type": "boolean"
+        }
+      },
+      "title": "SecuritySettings",
+      "type": "object"
+    },
+    "StaleSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "include_admin_down": {
+          "default": false,
+          "description": "Count administratively-down access ports as stale.",
+          "title": "Include Admin Down",
+          "type": "boolean"
+        },
+        "use_mac_table": {
+          "default": true,
+          "description": "Treat MAC addresses learned on a port as proof it is in use. Requires the mac_table collector.",
+          "title": "Use Mac Table",
+          "type": "boolean"
+        }
+      },
+      "title": "StaleSettings",
+      "type": "object"
+    },
+    "TextFsmSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Parse 'show interfaces' with TextFSM.",
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "template_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Template directory override; null uses the NET_TEXTFSM environment variable.",
+          "title": "Template Path"
+        }
+      },
+      "title": "TextFsmSettings",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The complete, validated contents of config.yaml.",
+  "properties": {
+    "jump_host": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "SSH bastion used to reach the switches; null connects directly. Env override: JUMP_HOST.",
+      "title": "Jump Host"
+    },
+    "credentials": {
+      "$ref": "#/$defs/CredentialSettings"
+    },
+    "connection": {
+      "$ref": "#/$defs/ConnectionSettings"
+    },
+    "security": {
+      "$ref": "#/$defs/SecuritySettings"
+    },
+    "audit": {
+      "$ref": "#/$defs/AuditSettings"
+    },
+    "collectors": {
+      "additionalProperties": {
+        "type": "boolean"
+      },
+      "description": "Optional data collectors to switch on or off by name. Run --list-collectors for the available names and their defaults.",
+      "title": "Collectors",
+      "type": "object"
+    },
+    "concurrency": {
+      "$ref": "#/$defs/ConcurrencySettings"
+    },
+    "output": {
+      "$ref": "#/$defs/OutputSettings"
+    },
+    "textfsm": {
+      "$ref": "#/$defs/TextFsmSettings"
+    }
+  },
+  "title": "Access Switch Audit configuration",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
