@@ -8,7 +8,7 @@ cffi==2.1.1 ; platform_python_implementation != 'PyPy'
     # via
     #   cryptography
     #   pynacl
-cryptography==50.0.1
+cryptography==50.0.2
     # via paramiko
 et-xmlfile==2.0.0
     # via openpyxl
@@ -16,18 +16,18 @@ invoke==3.0.3
     # via paramiko
 linkify-it-py==2.2.0
     # via markdown-it-py
-markdown-it-py==4.2.0
+markdown-it-py==4.3.0
     # via
     #   mdit-py-plugins
     #   rich
     #   textual
-mdit-py-plugins==0.6.1
+mdit-py-plugins==0.7.0
     # via textual
 mdurl==0.1.2
     # via markdown-it-py
-netmiko==4.7.0
+netmiko==4.8.0
     # via -r requirements.txt
-ntc-templates==9.2.0
+ntc-templates==9.3.0
     # via netmiko
 numpy==2.2.6 ; python_full_version < '3.11'
     # via pandas
@@ -46,13 +46,13 @@ paramiko==4.0.0
     #   -r requirements.txt
     #   netmiko
     #   scp
-platformdirs==4.11.7
+platformdirs==4.12.4
     # via textual
-pycparser==3.0 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
+pycparser==3.11 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
     # via cffi
-pydantic==2.13.5
+pydantic==2.14.3
     # via -r requirements.txt
-pydantic-core==2.46.5
+pydantic-core==2.50.4
     # via pydantic
 pygments==2.21.0
     # via
@@ -64,7 +64,7 @@ pyserial==3.5
     # via netmiko
 python-dateutil==2.9.0.post0
     # via pandas
-pytz==2026.3.post1 ; python_full_version < '3.11'
+pytz==2026.6 ; python_full_version < '3.11'
     # via pandas
 pywin32==312 ; sys_platform == 'win32'
     # via -r requirements.txt
@@ -79,18 +79,18 @@ rich==15.0.0
     #   textual
 ruamel-yaml==0.19.1
     # via netmiko
-scp==0.16.1
+scp==0.16.2
     # via netmiko
 six==1.17.0
     # via python-dateutil
-textfsm==2.1.0
+textfsm==2.1.1
     # via
     #   -r requirements.txt
     #   netmiko
     #   ntc-templates
 textual==8.2.8
     # via -r requirements.txt
-tomli==2.4.1 ; python_full_version < '3.11'
+tomli==2.5.0 ; python_full_version < '3.11'
     # via -r requirements.txt
 typing-extensions==4.16.0
     # via
@@ -99,7 +99,7 @@ typing-extensions==4.16.0
     #   pydantic-core
     #   textual
     #   typing-inspection
-typing-inspection==0.4.4
+typing-inspection==0.4.5
     # via pydantic
-tzdata==2026.3 ; python_full_version < '3.11' or sys_platform == 'emscripten' or sys_platform == 'win32'
+tzdata==2026.6 ; python_full_version < '3.11' or sys_platform == 'emscripten' or sys_platform == 'win32'
     # via pandas
