@@ -41,7 +41,7 @@ pandas==2.3.3 ; python_full_version < '3.11'
     # via -r requirements.txt
 pandas==3.0.5 ; python_full_version >= '3.11'
     # via -r requirements.txt
-paramiko==4.0.0
+paramiko==5.1.0
     # via
     #   -r requirements.txt
     #   netmiko
